@@ -1,0 +1,28 @@
+<launch>
+    <!-- -->
+    <!-- text reader -->
+    <node name="text_reading_node" pkg="nodelet" type="nodelet" args="manager" output="screen"/>
+    <!-- -->
+    <!-- text reading plugin -->
+    <node name="text_reader_loader" pkg="nodelet" type="nodelet" 
+          args="load text_reader/TextReader text_reading_node" output="screen">
+        <remap from="image_raw" to="image_raw"/>
+        <remap from="image_out" to="text_image"/>
+        <remap from="texts_out" to="text_data"/>
+        <param name="republish_image" value="true"/>
+    </node>
+    <!-- -->
+    <!-- object drawing plugin -->
+    <node name="object_drawer_loader" pkg="nodelet" type="nodelet" 
+          args="load object_drawer/ObjectDrawer object_detection_node" output="screen">
+        <remap from="image_raw" to="text_image"/>
+        <remap from="objects_in" to="text_data"/>
+        <remap from="image_out" to="annotated_image"/>
+    </node>
+    <!-- -->
+    <!-- viewer -->
+    <node name="object_viewer" pkg="nodelet" type="nodelet" 
+            args="standalone image_view/image" output="screen">
+        <remap from="image" to="annotated_image"/>
+    </node>
+</launch>
