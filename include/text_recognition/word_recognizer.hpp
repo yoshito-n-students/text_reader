@@ -13,12 +13,14 @@
 #include <message_filters/time_synchronizer.h>
 #include <nodelet/nodelet.h>
 #include <object_detection_msgs/Objects.h>
+#include <object_detection_msgs/cv_conversions.hpp>
 #include <ros/node_handle.h>
 #include <ros/package.h>
 #include <ros/publisher.h>
 #include <sensor_msgs/Image.h>
 
 #include <opencv2/core.hpp>
+#include <opencv2/imgproc.hpp>
 #include <opencv2/text.hpp>
 
 #include <boost/filesystem/path.hpp>
@@ -46,7 +48,7 @@ private:
 
     // create the word recognizer
     const boost::filesystem::path data_dir(
-        boost::filesystem::path(ros::package::getPath("text_reader")) / "data");
+        boost::filesystem::path(ros::package::getPath("text_recognition")) / "data");
     recognizer_ = cv::text::OCRHolisticWordRecognizer::create(
         pnh.param("architecture_file", (data_dir / "dictnet_vgg_deploy.prototxt").string()),
         pnh.param("weights_file", (data_dir / "dictnet_vgg.caffemodel").string()),
@@ -94,8 +96,22 @@ private:
     const object_detection_msgs::ObjectsPtr word_msg(new object_detection_msgs::Objects);
     word_msg->header = image_msg->header;
     for (std::size_t i = 0; i < text_msg->contours.size(); ++i) {
-      // TODO: clip image
+      // trim the original image
       cv::Mat word_image;
+      {
+        // increase size ?? try 4 rotations ??
+        cv::RotatedRect src_area(
+            cv::minAreaRect(object_detection_msgs::toCvPoints(text_msg->contours[i])));
+        cv::Point2f src_corners[4];
+        src_area.points(src_corners); // bl, tl, tr, br
+        const cv::Point2f dst_corners[3] = {cv::Point2f(0., src_area.size.height),
+                                            cv::Point2f(0., 0.),
+                                            cv::Point2f(src_area.size.width, 0.)};
+        cv::warpAffine(image->image, word_image, cv::getAffineTransform(src_corners, dst_corners),
+                       src_area.size);
+      }
+
+      // recognize the trimed image
       std::string word;
       std::vector< float > probability;
       recognizer_->run(word_image, word, NULL, NULL, &probability);
