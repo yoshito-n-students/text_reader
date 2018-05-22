@@ -37,6 +37,8 @@ private:
 
     // load parameters
     republish_image_ = pnh.param("republish_image", false);
+    score_threshold_ = pnh.param("score_threshold", 0.4);
+    nms_threshold_ = pnh.param("nms_threshold", 0.5);
 
     // create the text detector
     const boost::filesystem::path data_dir(
@@ -86,7 +88,7 @@ private:
     // remove overlapped boxes
     // (TODO: thresholds from parameters)
     std::vector< int > indices;
-    cv::dnn::NMSBoxes(boxes, probabilities, 0.4f, 0.5f, indices);
+    cv::dnn::NMSBoxes(boxes, probabilities, score_threshold_, nms_threshold_, indices);
     if (indices.empty()) {
       return;
     }
@@ -108,6 +110,7 @@ private:
 
 private:
   bool republish_image_;
+  double score_threshold_, nms_threshold_;
 
   image_transport::Subscriber image_subscriber_;
   image_transport::Publisher image_publisher_;
