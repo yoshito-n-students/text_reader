@@ -24,6 +24,7 @@
 #include <opencv2/text.hpp>
 
 #include <boost/filesystem/path.hpp>
+#include <boost/foreach.hpp>
 #include <boost/scoped_ptr.hpp>
 
 namespace text_recognition {
@@ -45,6 +46,7 @@ private:
     // load parameters
     const int queue_size(pnh.param("queue_size", 10));
     republish_image_ = pnh.param("republish_image", false);
+    min_probability_ = pnh.param("min_probability", 0.5);
 
     // create the word recognizer
     const boost::filesystem::path data_dir(
@@ -76,6 +78,8 @@ private:
 
   void recognize(const sensor_msgs::ImageConstPtr &image_msg,
                  const object_detection_msgs::ObjectsConstPtr &text_msg) {
+    namespace odm = object_detection_msgs;
+
     // do nothing if no nodes subscribe messages from this nodelet
     if (image_publisher_.getNumSubscribers() == 0 && word_publisher_.getNumSubscribers() == 0) {
       return;
@@ -93,36 +97,29 @@ private:
     }
 
     // recognizing texts in the image
-    const object_detection_msgs::ObjectsPtr word_msg(new object_detection_msgs::Objects);
+    const odm::ObjectsPtr word_msg(new odm::Objects);
     word_msg->header = image_msg->header;
-    for (std::size_t i = 0; i < text_msg->contours.size(); ++i) {
-      // trim the original image
-      cv::Mat word_image;
-      {
-        // increase size ?? try 4 rotations ??
-        cv::RotatedRect src_area(
-            cv::minAreaRect(object_detection_msgs::toCvPoints(text_msg->contours[i])));
-        cv::Point2f src_corners[4];
-        src_area.points(src_corners); // bl, tl, tr, br
-        const cv::Point2f dst_corners[3] = {cv::Point2f(0., src_area.size.height),
-                                            cv::Point2f(0., 0.),
-                                            cv::Point2f(src_area.size.width, 0.)};
-        cv::warpAffine(image->image, word_image, cv::getAffineTransform(src_corners, dst_corners),
-                       src_area.size);
+    BOOST_FOREACH (const odm::Points &contour_msg, text_msg->contours) {
+      // assuming a contour is a rectangle having 4 corners
+      if (contour_msg.points.size() != 4) {
+        NODELET_WARN("Invalid text box not exactly having 4 corners");
+        continue;
       }
 
       // recognize the trimed image
+      cv::Mat word_image(image->image, cv::Rect(odm::toCvPoint(contour_msg.points[0]),
+                                                odm::toCvPoint(contour_msg.points[2])));
       std::string word;
       std::vector< float > probability;
       recognizer_->run(word_image, word, NULL, NULL, &probability);
-      if (word.empty()) {
+      if (word.empty() || probability[0] < min_probability_) {
         continue;
       }
 
       // pack the recognition result
       word_msg->names.push_back(word);
       word_msg->probabilities.push_back(probability[0]);
-      word_msg->contours.push_back(text_msg->contours[i]);
+      word_msg->contours.push_back(contour_msg);
     }
     if (word_msg->names.empty()) {
       return;
@@ -137,6 +134,7 @@ private:
 
 private:
   bool republish_image_;
+  double min_probability_;
 
   image_transport::SubscriberFilter image_subscriber_;
   message_filters::Subscriber< object_detection_msgs::Objects > text_subscriber_;
