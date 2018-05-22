@@ -1,5 +1,10 @@
-<library path="lib/libtext_reader">
-    <class name="text_reader/TextReader" type="text_reader::TextReader" base_class_type="nodelet::Nodelet">
-        <description>read and locate texts in an image</description>
+<library path="lib/libtext_recognition">
+    <!-- -->
+    <class name="text_recognition/TextDetector" type="text_recognition::TextDetector" base_class_type="nodelet::Nodelet">
+        <description>text recognition step 1 of 2: detect text boxes in an image</description>
+    </class>
+    <!-- -->
+    <class name="text_recognition/WordRecognizer" type="text_recognition::WordRecognizer" base_class_type="nodelet::Nodelet">
+        <description>text recognition step 2 of 2: recognize words in image regions</description>
     </class>
 </library>

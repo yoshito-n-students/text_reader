@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(text_reader)
+project(text_recognition)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -23,6 +23,7 @@ find_package(Boost REQUIRED COMPONENTS
 )
 find_package(OpenCV REQUIRED COMPONENTS 
   core
+  dnn
   text
 )
 
@@ -114,7 +115,7 @@ find_package(OpenCV REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES text_reader
+  LIBRARIES text_recognition
   CATKIN_DEPENDS cv_bridge image_transport nodelet object_detection_msgs pluginlib roscpp sensor_msgs
 #  DEPENDS system_lib
 )
@@ -132,15 +133,16 @@ include_directories(
 
 ## Declare a C++ library
 add_library(
-  text_reader
-  src/text_reader.cpp
+  text_recognition
+  src/text_detector.cpp
+  src/word_recognizer.cpp
 )
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
 add_dependencies(
-  text_reader
+  text_recognition
   ${catkin_EXPORTED_TARGETS}
 )
 
@@ -161,7 +163,7 @@ add_dependencies(
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(
-  text_reader
+  text_recognition
   ${catkin_LIBRARIES}
   ${Boost_LIBRARIES}
   ${OpenCV_LIBRARIES}
