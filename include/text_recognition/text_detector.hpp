@@ -22,6 +22,7 @@
 
 #include <boost/filesystem/path.hpp>
 #include <boost/foreach.hpp>
+#include <boost/function.hpp>
 
 namespace text_recognition {
 
@@ -37,8 +38,6 @@ private:
 
     // load parameters
     republish_image_ = pnh.param("republish_image", false);
-    score_threshold_ = pnh.param("score_threshold", 0.4);
-    nms_threshold_ = pnh.param("nms_threshold", 0.5);
 
     // create the text detector
     const boost::filesystem::path data_dir(
@@ -46,6 +45,11 @@ private:
     detector_ = cv::text::TextDetectorCNN::create(
         pnh.param("architecture_file", (data_dir / "textbox.prototxt").string()),
         pnh.param("weights_file", (data_dir / "TextBoxes_icdar13.caffemodel").string()));
+
+    // create the overlapped detection suppressor
+    suppressor_ = boost::bind(cv::dnn::NMSBoxes, _1, _2, pnh.param("score_threshold", 0.4),
+                              pnh.param("nms_threshold", 0.5), _3, pnh.param("eta", 1.),
+                              pnh.param("top_k", 0));
 
     // start detection
     image_transport::ImageTransport it(nh);
@@ -86,9 +90,8 @@ private:
     }
 
     // remove overlapped boxes
-    // (TODO: thresholds from parameters)
     std::vector< int > indices;
-    cv::dnn::NMSBoxes(boxes, probabilities, score_threshold_, nms_threshold_, indices);
+    suppressor_(boxes, probabilities, indices);
     if (indices.empty()) {
       return;
     }
@@ -110,13 +113,15 @@ private:
 
 private:
   bool republish_image_;
-  double score_threshold_, nms_threshold_;
 
   image_transport::Subscriber image_subscriber_;
   image_transport::Publisher image_publisher_;
   ros::Publisher text_publisher_;
 
   cv::Ptr< cv::text::TextDetectorCNN > detector_;
+  boost::function< void(const std::vector< cv::Rect > &, const std::vector< float > &,
+                        std::vector< int > &) >
+      suppressor_;
 };
 
 } // namespace text_recognition
