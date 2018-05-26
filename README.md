@@ -5,6 +5,14 @@ A ROS nodelet to read and locate texts in an image
 object_detection_msgs
 * https://github.com/yoshito-n-students/object_detection_msgs
 
+## Default deep neural networks
+If you want to use default DNNs, run the following commands to download data.
+```
+roscd text_recognition/data
+./download_data.sh
+```
+Size of downloaded files would be 2-3GB in total. May take minutes or hours. If a link in the script is dead, please post an issue (with a valid link if possible).
+
 ## Nodelet: TextDetector
 * subscribe images and detect bounding boxes of word-level texts (text boxes)
 
