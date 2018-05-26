@@ -1,0 +1,53 @@
+<launch>
+    <!-- -->
+    <!-- text recognizer -->
+    <node name="text_recognition_node" pkg="nodelet" type="nodelet" args="manager" output="screen"/>
+    <!-- -->
+    <!-- text detection plugin -->
+    <node name="text_detector_loader" pkg="nodelet" type="nodelet" 
+          args="load text_recognition/TextDetector text_recognition_node" output="screen">
+        <remap from="image_raw" to="image_raw"/>
+        <remap from="image_out" to="text_image"/>
+        <remap from="texts_out" to="text_data"/>
+        <param name="republish_image" value="true"/>
+        <param name="score_threshold" value="0.3"/>
+    </node>
+    <!-- -->
+    <!-- object drawing plugin for text detection results -->
+    <node name="text_drawer_loader" pkg="nodelet" type="nodelet" 
+          args="load object_drawer/ObjectDrawer text_recognition_node" output="screen">
+        <remap from="image_raw" to="text_image"/>
+        <remap from="objects_in" to="text_data"/>
+        <remap from="image_out" to="annotated_text_image"/>
+        <rosparam param="line_color">[ 0, 255, 0 ]</rosparam>
+    </node>
+    <!-- -->
+    <!-- word recognition plugin -->
+    <node name="word_recognizer_loader" pkg="nodelet" type="nodelet" 
+          args="load text_recognition/WordRecognizer text_recognition_node" output="screen">
+        <remap from="image_raw" to="text_image"/>
+        <remap from="texts_in" to="text_data"/>
+        <remap from="image_out" to="word_image"/>
+        <remap from="words_out" to="word_data"/>
+        <param name="republish_image" value="true"/>
+    </node>
+    <!-- -->
+    <!-- object drawing plugin for word recognition results -->
+    <node name="word_drawer_loader" pkg="nodelet" type="nodelet" 
+          args="load object_drawer/ObjectDrawer text_recognition_node" output="screen">
+        <remap from="image_raw" to="word_image"/>
+        <remap from="objects_in" to="word_data"/>
+        <remap from="image_out" to="annotated_word_image"/>
+        <rosparam param="line_color">[ 255, 0, 0 ]</rosparam>
+    </node>
+    <!-- -->
+    <!-- viewers -->
+    <node name="text_image_viewer" pkg="nodelet" type="nodelet" 
+            args="standalone image_view/image" output="screen">
+        <remap from="image" to="annotated_text_image"/>
+    </node>
+    <node name="word_image_viewer" pkg="nodelet" type="nodelet" 
+            args="standalone image_view/image" output="screen">
+        <remap from="image" to="annotated_word_image"/>
+    </node>
+</launch>
