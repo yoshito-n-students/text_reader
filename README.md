@@ -22,18 +22,14 @@ texts_out (object_detection_msgs/Objects)
 ~republish_image (bool, default: true)
 * republish image if one text box at least is detected
 
-~architecture_file (string, default: "$(find text_recognition)/data/textbox.prototxt")
-
+~architecture_file (string, default: "$(find text_recognition)/data/textbox.prototxt")\
 ~weights_file (string, default: "$(find text_recognition)/data/TextBoxes_icdar13.caffemodel")
 * deep neural network to detect text boxes
 * valid as arguments for cv::text::TextDetectorCNN::create()
 
-~score_threshold (double, default: 0.4)
-
-~nms_threshold (double, default: 0.5)
-
-~eta (double, default: 1.0)
-
+~score_threshold (double, default: 0.4)\
+~nms_threshold (double, default: 0.5)\
+~eta (double, default: 1.0)\
 ~top_k (int, default: 0)
 * post-filtering to suppress overlapped detection
 * valid as arguments for cv::dnn::NMSBoxes()
@@ -67,10 +63,8 @@ words_out (object_detection_msgs/Objects)
 ~min_probability (double, default: 0.5)
 * minimum probability of published words
 
-~architecture_file (string, default: "$(find text_recognition)/data/dictnet_vgg_deploy.prototxt")
-
-~weights_file (string, default: "$(find text_recognition)/data/dictnet_vgg.caffemodel")
-
+~architecture_file (string, default: "$(find text_recognition)/data/dictnet_vgg_deploy.prototxt")\
+~weights_file (string, default: "$(find text_recognition)/data/dictnet_vgg.caffemodel")\
 ~words_file (string, default: "$(find text_recognition)/data/dictnet_vgg_labels.txt")
 * deep neural network to recognize a word in a text box
 * valid as arguments for cv::text::OCRHolisticWordRecognizer::create()
