@@ -1,4 +1,4 @@
-# text_reader
+# text_recognition
 A ROS nodelet to read and locate texts in an image
 
 ## Dependencies
