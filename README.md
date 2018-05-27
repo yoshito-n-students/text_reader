@@ -14,6 +14,7 @@ roscd text_recognition/data
 Size of downloaded files would be 2-3GB in total. May take minutes or hours. If a link in the script is dead, please post an issue (with a valid link if possible).
 
 ## Nodelet: TextDetector
+* former part of text recognition
 * subscribe images and detect bounding boxes of word-level texts (text boxes)
 
 ### Subscribed topics
@@ -45,6 +46,7 @@ texts_out (object_detection_msgs/Objects)
 ~image_transport (string, default: "raw")
 
 ## Nodelet: WordRecognizer
+* latter part of text recognition
 * subscribe images and corresponding text boxes, and recognize words
 
 ### Subscribed topics
